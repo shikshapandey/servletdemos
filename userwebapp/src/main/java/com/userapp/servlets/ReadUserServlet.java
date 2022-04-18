@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -15,12 +16,12 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-@WebServlet("/addServlet")
-public class CreateUserServlet extends HttpServlet {
+@WebServlet("/readServlet")
+public class ReadUserServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	
 	private Connection connection;
-	
+       
 	public void init(ServletConfig sc) {
 		System.out.println("initializing addservlet...");
 		ServletContext context = sc.getServletContext();
@@ -33,25 +34,40 @@ public class CreateUserServlet extends HttpServlet {
 			e.printStackTrace();
 		}
 	}
-	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		System.out.println("Inside post method...");
-		String firstname = request.getParameter("firstname");
-		String lastname = request.getParameter("lastname");
-		String email = request.getParameter("email");
-		String password = request.getParameter("password");
+	
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		System.out.println("inside doGet...");
 		try {
 			Statement statement = connection.createStatement();
-			// insert into user values ('joe', 'wilson', 'jwil@example.com', 'test1');
-			int result = statement.executeUpdate("insert into user values ('" + firstname + "', '" + lastname + "', '" + email + "', '" + password + "')");
+			ResultSet rs = statement.executeQuery("select * from user");
 			PrintWriter out = response.getWriter();
-			if (result > 0) {
-				out.println("<h1>User Created</h1>");
-			} else {
-				out.println("<h1>Error creating the user</h1>");
+			out.println("<table border=1>");
+			out.println("<tr>");
+			out.println("<th>First Name</th>");
+			out.println("<th>Last Name</th>");
+			out.println("<th>Email</th>");
+			out.println("</tr>");
+			while (rs.next()) {
+				out.println("<tr>");
+				out.println("<td>" + rs.getString(1) + "</td>");
+				out.println("<td>" + rs.getString(2) + "</td>");
+				out.println("<td>" + rs.getString(3) + "</td>");
+				out.println("</tr>");
 			}
+			out.println("</table>");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 	}
 
+	public void destroy() {
+		try {
+			if (connection != null) {
+				connection.close();
+			} 
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	
+	}
 }
