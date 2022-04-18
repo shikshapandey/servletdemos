@@ -1,11 +1,11 @@
-package com.userapp.servlets;
+package com.productapp.servlets;
 
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Statement;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -15,12 +15,15 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-@WebServlet("/deleteServlet")
-public class DeleteUserServlet extends HttpServlet {
+/**
+ * Servlet implementation class AddProductServlet
+ */
+@WebServlet("/updateProductServlet")
+public class UpdateProductServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
-
 	private Connection connection;
-
+	private PreparedStatement ps;
+       
 	public void init(ServletConfig sc) {
 		System.out.println("initializing addservlet...");
 		ServletContext context = sc.getServletContext();
@@ -29,29 +32,29 @@ public class DeleteUserServlet extends HttpServlet {
 			connection = DriverManager.getConnection(context.getInitParameter("dbUrl"), 
 					context.getInitParameter("dbUser"), 
 					context.getInitParameter("dbPassword"));
+			ps = connection.prepareStatement("update product set price = ? where id = ?");
 		} catch (SQLException | ClassNotFoundException e) {
 			e.printStackTrace();
 		}
 	}
 	
-
-	protected void doPost(HttpServletRequest request, HttpServletResponse response)
-			throws ServletException, IOException {
-		System.out.println("Inside post method...");
-		String email = request.getParameter("email");
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		
+		int id = Integer.parseInt(request.getParameter("id"));
+		int price = Integer.parseInt(request.getParameter("price"));
+		
 		try {
-			Statement statement = connection.createStatement();
-			// delete from user where email = 'jwil@example.com'
-			int result = statement.executeUpdate("delete from user where email='" + email + "'");
+			ps.setInt(1, price);
+			ps.setInt(2, id);
+			int result = ps.executeUpdate();
+			response.setContentType("text/html");
 			PrintWriter out = response.getWriter();
-			if (result > 0) {
-				out.println("<h1>User deleted</h1>");
-			} else {
-				out.println("<h1>User not found in the database</h1>");
-			}
+			out.println("<b>" + result + " products updated. </b>");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+		
+		
 	}
 
 	public void destroy() {
@@ -64,5 +67,4 @@ public class DeleteUserServlet extends HttpServlet {
 		}
 	
 	}
-
 }
